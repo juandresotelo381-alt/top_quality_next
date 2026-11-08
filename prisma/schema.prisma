@@ -1,0 +1,93 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Product model - matches original products table
+model Product {
+  id            Int           @id @default(autoincrement)
+  name          String
+  description   String?
+  category      String
+  active        Boolean       @default(true)
+  created_at    DateTime      @default(now())
+  // Calculated fields
+  min_price     Float?
+  total_stock   Int?
+  cover         String?
+  // Relations
+  variants      Variant[]
+  photos        ProductPhoto[]
+  order_items   OrderItem[]
+}
+
+// Variant model - matches product_variants table
+model Variant {
+  id          Int       @id @default(autoincrement)
+  product_id  Int
+  size        String
+  color       String
+  price       Float
+  stock       Int
+  // Relations
+  product     Product   @relation(fields: [product_id], references: [id])
+  photos      VariantPhoto[]
+  order_items OrderItem[]
+}
+
+// ProductPhoto model - matches product_photos table
+model ProductPhoto {
+  id          Int       @id @default(autoincrement)
+  product_id  Int
+  file_name   String
+  alt_text    String?
+  // Relations
+  product     Product   @relation(fields: [product_id], references: [id])
+}
+
+// VariantPhoto model - matches variant_photos table
+model VariantPhoto {
+  id          Int       @id @default(autoincrement)
+  variant_id  Int
+  product_id  Int
+  file_name   String
+  alt_text    String?
+  // Relations
+  variant     Variant   @relation(fields: [variant_id], references: [id])
+  product     Product   @relation(fields: [product_id], references: [id])
+}
+
+// Order model - matches orders table
+model Order {
+  id             Int           @id @default(autoincrement)
+  order_number   String        @unique
+  payment_status String        @default("PENDIENTE")
+  total          Float
+  customer_name  String?
+  customer_doc   String?
+  customer_phone String?
+  customer_email String?
+  customer_address String?
+  city           String?
+  created_at     DateTime      @default(now())
+  // Relations
+  items        OrderItem[]
+}
+
+// OrderItem model - matches order_items table
+model OrderItem {
+  id           Int     @id @default(autoincrement)
+  order_id     Int
+  variant_id   Int?
+  product_id   Int
+  quantity     Int
+  price        Float
+  // Relations
+  order        Order     @relation(fields: [order_id], references: [id])
+  variant      Variant?  @relation(fields: [variant_id], references: [id])
+  product      Product   @relation(fields: [product_id], references: [id])
+}
